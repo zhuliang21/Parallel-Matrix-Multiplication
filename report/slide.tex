@@ -1,0 +1,60 @@
+\documentclass[professionalfonts, aspectratio=169]{beamer}  % Specifies the document class
+\usefonttheme{serif}                                        % Font theme: serif
+\usepackage[utf8]{inputenc}                                 % Allows the use of different input encodings
+\usepackage{graphicx}                                       % Enhanced support for graphics
+\usepackage{amsmath}                                        % Enhances the typesetting of mathematics
+\usepackage{amsfonts}                                       % Extra mathematical fonts
+\usepackage{amssymb}                                        % Extra mathematical symbols
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows,positioning}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.17}
+\usepackage{multirow}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true, 
+    linkcolor=structure,   % color of internal links，'structure' means 'structure' color in the color theme
+    urlcolor=blue    
+}  
+
+\usepackage{appendixnumberbeamer} % Numbering appendixes in beamer
+\pdfstringdefDisableCommands{
+  \def\translate{}
+}
+\usepackage{dcolumn}
+\setbeamertemplate{navigation symbols}{} % Remove navigation symbols
+\setbeamertemplate{footline}[frame number] % Add page number
+
+% \setbeamercovered{transparent}  % Semi-transparent overlay
+
+%---- Set the title page ----%
+\title{Project 4.1}
+\author{Zhu Liang}
+\date{\today}
+
+%---- Begin the document ----%
+\begin{document}
+
+\AtBeginSection[] % At the beginning of each section...
+{
+  \begin{frame}[noframenumbering, plain] % Create a new frame without a frame number
+    \tableofcontents[currentsection] % Display the table of contents for the current section
+  \end{frame}
+}
+
+\begin{frame}[noframenumbering, plain] % title frame without a frame number
+    \titlepage
+\end{frame}
+
+
+%---- The ending ----%
+\begin{frame}[plain, noframenumbering] % Create a new frame without a frame number
+  \begin{center}
+  \Huge \textit{Thank You!} % Use a huge font size for the text "Thank You!"
+  \end{center}
+\end{frame}
+
+%---- The appendix ----%
+\appendix
+
+\end{document}
