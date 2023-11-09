@@ -9,6 +9,7 @@
 #include <math.h> 
 
 #define ROOT 0  // set root process
+#define NUM_TASKS 7
 
 
 typedef struct {
@@ -39,38 +40,20 @@ Matrix* matrix_multiply(const Matrix* A, const Matrix* B);
 
 Matrix* combine_matrix(Matrix *C11, Matrix *C12, Matrix *C21, Matrix *C22);
 
-Matrix* strassen_multiply_serial(const Matrix* A, const Matrix* B);
-
-Matrix* strassen_multiply_serial_recursive(const Matrix* A, const Matrix* B, int currentLevel, int maxLevel);
-
-int check_result(Matrix* result_1, Matrix* result_2, double tolerance);
-
 int quick_check_result(Matrix* result_1, Matrix* result_2, double tolerance);
-
-Matrix* strassen_multiply_level_1(Matrix* A, Matrix* B);
-
-Matrix* strassen_multiply(Matrix* A, Matrix* B);
 
 void prepare_strassen(Matrix* A, Matrix* B, Matrix* M_A[], Matrix* M_B[]);
 
-void worker_receive_submatrices(int rank, int local_n, Matrix** M_A, Matrix** M_B);
+int is_leader(int rank, int level);
 
-void root_send_submatrices(Matrix* M_A[], Matrix* M_B[], int local_n);
+int is_worker(int rank, int level);
 
-void root_receive_results(Matrix* M[], int local_n);
+int get_leader_rank(int rank);
 
-void worker_send_results(Matrix* M, int rank, int local_n);
+int* get_worker_rank(int rank);
 
+void print_data(int* data, int data_size);
 
-#define NUM_TASKS 7  
-
-#define TAG_BASE_A 111
-#define TAG_BASE_B 112
-#define TAG_BASE_C 113
-
-#define TAG_Mi_A(i) (TAG_BASE_A + (i) * 10)
-#define TAG_Mi_B(i) (TAG_BASE_B + (i) * 10)
-#define TAG_Mi(i)  (TAG_BASE_C + (i) * 10)
 
 #endif // HEADER_H
  
