@@ -14,7 +14,8 @@ int main(int argc, char** argv) {
 
     int N = 1 << 2;
     int local_n = N / 2;
-
+    int max_level = 1;
+    int level;
 
     // 创建矩阵A和B，只在根进程进行
     Matrix *A = NULL, *B = NULL;
@@ -29,10 +30,21 @@ int main(int argc, char** argv) {
         print_matrix(B);
     }
     Matrix *M_A = NULL, *M_B = NULL;
-    distribute_data(&M_A, &M_B, A, B, local_n, 1);
-    // compute C on each process
+
+    for (level = 1; level <= max_level; level++) {
+        distribute_data(&M_A, &M_B, A, B, local_n, level);
+        //  updata A B with M_A M_B
+        A = M_A;
+        B = M_B;
+        local_n = local_n / 2;
+        printf("level %d\n", level);
+    }
+
     MPI_Barrier(MPI_COMM_WORLD);
-    printf("process %d: compute C\n", rank);
+    Matrix* C = matrix_multiply(A, B);
+    printf("matrix C: on process %d\n", rank);
+    print_matrix(C);
+
     // 终止MPI环境
     MPI_Finalize();
     return 0;

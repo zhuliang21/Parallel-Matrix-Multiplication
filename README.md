@@ -98,9 +98,12 @@ to testrun if the parallel recursive function works
     - [x] `is root` to check if current rank is root under current level
     - [x] `is worker` to check if current rank is worker under current level
 
-- [x] `distribute_data` to assign data to each core on mutiple master-slave tree to the lowest level
-    - [ ] `root_send_data` to send data to workers
-    - [ ] `worker_receive_data` to receive data from root
+- [x] `distribute_data` to assign data to each core on mutiple master-slave tree to the lowest level (for-loop)
+
+- [ ] `matrix_multiply` to compute on the lowest level
+
+- [ ] `collect_results` to collect data from the lowest level to the ROOT (for-loop)
+
     
 
 

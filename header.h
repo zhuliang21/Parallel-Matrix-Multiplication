@@ -28,6 +28,8 @@ Matrix* generate_matrix(int rows, int cols);
 
 void free_matrix(Matrix* matrix);
 
+Matrix* copy_matrix(const Matrix* original);
+
 void print_matrix(Matrix* matrix);
 
 void split_matrix(const Matrix *original, Matrix *block11, Matrix *block12, Matrix *block21, Matrix *block22);
