@@ -54,6 +54,7 @@ int* get_worker_rank(int rank);
 
 void print_data(int* data, int data_size);
 
+void distribute_data(Matrix** M_A, Matrix** M_B, Matrix* A, Matrix* B, int local_n, int level);
 
 #endif // HEADER_H
  

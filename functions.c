@@ -287,3 +287,43 @@ void print_data(int* data, int data_size) {
     }
     printf("\n");
 }
+
+void distribute_data(Matrix** M_A, Matrix** M_B, Matrix* A, Matrix* B, int local_n, int level) {
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    if (is_leader(rank, level)) {
+        // Leader逻辑
+        int* worker_rank = get_worker_rank(rank);
+        Matrix* M_A[NUM_TASKS];
+        Matrix* M_B[NUM_TASKS];
+        prepare_strassen(A, B, M_A, M_B);
+        
+
+        MPI_Request requests[NUM_TASKS * 2];
+        int request_count = 0;
+
+        for (int i = 0; i < NUM_TASKS; i++) {
+            MPI_Isend(M_A[i]->data, M_A[i]->rows * M_A[i]->cols, MPI_DOUBLE, worker_rank[i], 0, MPI_COMM_WORLD, &requests[request_count++]);
+            MPI_Isend(M_B[i]->data, M_B[i]->rows * M_B[i]->cols, MPI_DOUBLE, worker_rank[i], 1, MPI_COMM_WORLD, &requests[request_count++]);
+        }
+
+        MPI_Waitall(request_count, requests, MPI_STATUSES_IGNORE);
+        free_matrix(A);
+        free_matrix(B);
+        
+    } else if (is_worker(rank, level)) {
+        // Worker逻辑
+        int leader_rank = get_leader_rank(rank);
+        MPI_Request recv_requests[2];
+        int recv_count = 0;
+
+        *M_A = allocate_matrix(local_n, local_n);  // 使用您的函数创建矩阵并分配内存
+        *M_B = allocate_matrix(local_n, local_n);
+
+        MPI_Irecv((*M_A)->data, local_n * local_n, MPI_DOUBLE, leader_rank, 0, MPI_COMM_WORLD, &recv_requests[recv_count++]);
+        MPI_Irecv((*M_B)->data, local_n * local_n, MPI_DOUBLE, leader_rank, 1, MPI_COMM_WORLD, &recv_requests[recv_count++]);
+
+        MPI_Waitall(recv_count, recv_requests, MPI_STATUSES_IGNORE);
+    }
+}
