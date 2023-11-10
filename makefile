@@ -6,7 +6,7 @@ CFLAGS = -Wall
 TARGET = test
 
 # source files
-SOURCES = main.c functions.c
+SOURCES = main.c functions.c 
 OBJECTS = $(SOURCES:.c=.o)
 
 # make rule

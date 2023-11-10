@@ -332,3 +332,64 @@ void distribute_data(Matrix** M_A, Matrix** M_B, Matrix* A, Matrix* B, int local
         MPI_Waitall(recv_count, recv_requests, MPI_STATUSES_IGNORE);
     }
 }
+
+Matrix* assemble_C(Matrix* M[], int local_n) {
+    // 根据Strassen算法的结果计算最终的子矩阵C11, C12, C21, C22
+    Matrix* C11 = matrix_add(matrix_subtract(matrix_add(M[0], M[3]), M[4]), M[6]);
+    Matrix* C12 = matrix_add(M[2], M[4]);
+    Matrix* C21 = matrix_add(M[1], M[3]);
+    Matrix* C22 = matrix_add(matrix_subtract(matrix_add(M[0], M[2]), M[1]), M[5]);
+
+    // 组合这些子矩阵得到最终结果
+    Matrix* C = combine_matrix(C11, C12, C21, C22);
+
+    // 释放中间结果占用的内存
+    free_matrix(M[0]); free_matrix(M[1]); free_matrix(M[2]); free_matrix(M[3]);
+    free_matrix(M[4]); free_matrix(M[5]); free_matrix(M[6]);
+    free_matrix(C11); free_matrix(C12); free_matrix(C21); free_matrix(C22);
+
+    return C;
+}
+
+void collect_results(Matrix** M_C, Matrix* C, int local_n, int level) {
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    // worker sends data C to its leader under current level
+    if (is_worker(rank, level)) {
+        // worker sends data C to leader
+        int leader_rank = get_leader_rank(rank);
+        // send by Isend
+        MPI_Request send_request;
+        MPI_Isend(C->data, local_n * local_n, MPI_DOUBLE, leader_rank, 0, MPI_COMM_WORLD, &send_request);
+        // confirm send complete
+        MPI_Status send_status;
+        MPI_Wait(&send_request, &send_status);
+        printf("process %d send data to leader %d\n", rank, leader_rank);
+        free_matrix(C);
+    }
+
+    // leader receives data from workers and combine into C
+    if (is_leader(rank, level)) {
+        // leader receives data from workers
+        int* worker_rank = get_worker_rank(rank);
+
+        // allocate memory and receive data from workers by Irecv
+        Matrix* M[NUM_TASKS];
+
+        MPI_Request recv_requests[NUM_TASKS];
+        int recv_count = 0;
+
+        for (int i = 0; i < NUM_TASKS; i++) {
+            M[i] = allocate_matrix(local_n, local_n);
+            MPI_Irecv(M[i]->data, local_n * local_n, MPI_DOUBLE, worker_rank[i], 0, MPI_COMM_WORLD, &recv_requests[recv_count++]);
+        }
+        MPI_Waitall(recv_count, recv_requests, MPI_STATUS_IGNORE);
+        printf("ROOT received all local results\n");
+
+        // compute M into C11 C12 C21 C22 and combine into M_C
+        M_C = assemble_C(M, local_n);
+        printf("matrix C: on leader process\n");
+        print_matrix(M_C);
+    }
+
+}

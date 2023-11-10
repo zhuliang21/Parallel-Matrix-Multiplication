@@ -58,5 +58,10 @@ void print_data(int* data, int data_size);
 
 void distribute_data(Matrix** M_A, Matrix** M_B, Matrix* A, Matrix* B, int local_n, int level);
 
+Matrix* assemble_C(Matrix* M[], int local_n);
+
+void collect_results(Matrix** M_C, Matrix* C, int local_n, int level);
+
+
 #endif // HEADER_H
  

@@ -90,19 +90,27 @@ distribute_data(level, max_level){
 - [ ] add input arguments `currentLevel` and `maxLevel`
 - [ ] add quit condition `if (currentLevel == maxLevel)`
 
-#### `parallel_recursive_sum` 
-to testrun if the parallel recursive function works
+
 - [ ] functions for root and worker relationship
-    - [x] `get_root_rank` to get root rank
+    - [x] `get_leader_rank` to get root rank
     - [x] `get_worker_ranks` to get worker rank
-    - [x] `is root` to check if current rank is root under current level
-    - [x] `is worker` to check if current rank is worker under current level
+    - [x] `is_leader` to check if current rank is root under current level
+    - [x] `is_worker` to check if current rank is worker under current level
 
 - [x] `distribute_data` to assign data to each core on mutiple master-slave tree to the lowest level (for-loop)
+    - [x] leader devides and sends to its 7 workers
+    - [x] worker receives data from its leader (2 matrix)
+    - [x] for-loop to quit after reaching the lowest level (`max_level`), levle ++
 
 - [ ] `matrix_multiply` to compute on the lowest level
 
 - [ ] `collect_results` to collect data from the lowest level to the ROOT (for-loop)
+    - [ ] worker sends data (1 matrix) to leader under current level
+    - [ ] leader receives data from workers under current level and combine into one matrix
+        - compute C11, C12, C21, C22
+        - combine them into C
+    - [ ] for-loop to quit after reaching the ROOT (`level = 1`), level --
+
 
     
 

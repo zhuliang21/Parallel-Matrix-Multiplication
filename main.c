@@ -31,19 +31,32 @@ int main(int argc, char** argv) {
     }
     Matrix *M_A = NULL, *M_B = NULL;
 
+    // Step 1: divide matrix to workers, until level = max_level
     for (level = 1; level <= max_level; level++) {
         distribute_data(&M_A, &M_B, A, B, local_n, level);
         //  updata A B with M_A M_B
         A = M_A;
         B = M_B;
-        local_n = local_n / 2;
+        if (level < max_level) {
+            local_n = local_n / 2; // don't update local_n on the last level
+        }
         printf("level %d\n", level);
     }
+    level = max_level; // set level to max_level
 
-    MPI_Barrier(MPI_COMM_WORLD);
+    // Step 2: compute C = A * B
     Matrix* C = matrix_multiply(A, B);
     printf("matrix C: on process %d\n", rank);
     print_matrix(C);
+    free_matrix(A);
+    free_matrix(B);
+
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    // Step 3: collect results from workers and combine into C, until level = 1
+    Matrix* M_C;
+    collect_results(&M_C, C, local_n, level);
+
 
     // 终止MPI环境
     MPI_Finalize();
