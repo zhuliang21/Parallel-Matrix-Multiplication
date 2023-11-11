@@ -62,6 +62,10 @@ Matrix* assemble_C(Matrix* M[], int local_n);
 
 void collect_results(Matrix** M_C, Matrix* C, int local_n, int level);
 
+Matrix* strassen_parallel(Matrix* A, Matrix* B, int N, int max_level);
+
+Matrix* strassen_multiply_serial(const Matrix* A, const Matrix* B);
+
 
 #endif // HEADER_H
  

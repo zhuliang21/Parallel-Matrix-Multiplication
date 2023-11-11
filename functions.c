@@ -306,13 +306,12 @@ void distribute_data(Matrix** M_A, Matrix** M_B, Matrix* A, Matrix* B, int local
         for (int i = 0; i < NUM_TASKS; i++) {
             MPI_Isend(M_A[i]->data, M_A[i]->rows * M_A[i]->cols, MPI_DOUBLE, worker_rank[i], 0, MPI_COMM_WORLD, &requests[request_count++]);
             MPI_Isend(M_B[i]->data, M_B[i]->rows * M_B[i]->cols, MPI_DOUBLE, worker_rank[i], 1, MPI_COMM_WORLD, &requests[request_count++]);
+            printf("process %d send M_A[%d] and M_B[%d] to process %d\n", rank, i, i, worker_rank[i]);
             free_matrix(M_A[i]);
             free_matrix(M_B[i]);
         }
 
         MPI_Waitall(request_count, requests, MPI_STATUSES_IGNORE);
-        free_matrix(A);
-        free_matrix(B);
 
     }
 
@@ -330,6 +329,8 @@ void distribute_data(Matrix** M_A, Matrix** M_B, Matrix* A, Matrix* B, int local
         MPI_Irecv((*M_B)->data, local_n * local_n, MPI_DOUBLE, leader_rank, 1, MPI_COMM_WORLD, &recv_requests[recv_count++]);
 
         MPI_Waitall(recv_count, recv_requests, MPI_STATUSES_IGNORE);
+        // printf("process %d received M_A\n", rank);
+        // // print_matrix(*M_A);
     }
 }
 
@@ -382,14 +383,154 @@ void collect_results(Matrix** M_C, Matrix* C, int local_n, int level) {
         for (int i = 0; i < NUM_TASKS; i++) {
             M[i] = allocate_matrix(local_n, local_n);
             MPI_Irecv(M[i]->data, local_n * local_n, MPI_DOUBLE, worker_rank[i], 0, MPI_COMM_WORLD, &recv_requests[recv_count++]);
+            // // print matrix M[i]'s first element
+            // printf("M[%d][0][0] = %f\n", i, M[i]->data[0]);
+
         }
         MPI_Waitall(recv_count, recv_requests, MPI_STATUS_IGNORE);
         printf("ROOT received all local results\n");
 
         // compute M into C11 C12 C21 C22 and combine into M_C
-        M_C = assemble_C(M, local_n);
-        printf("matrix C: on leader process\n");
-        print_matrix(M_C);
+        *M_C = assemble_C(M, local_n);
+        // printf("matrix C: on leader process\n");
+        // print_matrix(*M_C);
     }
 
+}
+
+Matrix* strassen_parallel(Matrix* A, Matrix* B, int N, int max_level) {
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+
+    int local_n = N / 2;
+    int level;
+
+    // Step 1: divide matrix to workers, until level = max_level
+    for (level = 1; level <= max_level; level++) {
+        Matrix *M_A = NULL, *M_B = NULL;
+        distribute_data(&M_A, &M_B, A, B, local_n, level);
+        // printf("process %d finish distribute data\n", rank);
+        //  updata A B with M_A M_B
+        A = M_A;
+        B = M_B;
+        if (level < max_level) {
+            local_n = local_n / 2; // don't update local_n on the last level
+        }
+    }
+    level = max_level; // set level to max_level
+    printf("process %d finish divide data\n", rank);
+
+
+    // Step 2: compute C = A * B
+    Matrix* C = matrix_multiply(A, B);
+    // print C's first element and its rank
+    printf("M [0][0] %d: = %f\n", rank, C->data[0]);
+    free_matrix(A);
+    free_matrix(B);
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    // Step 3: collect results from workers and combine into C, until level = 1
+    for (level = max_level; level >= 1; level--) {
+        Matrix *M_C = NULL;
+        collect_results(&M_C, C, local_n, level);
+        // updata C with M_C
+        C = M_C;
+        if (level > 1) {
+            local_n = local_n * 2; // don't update local_n on the last level
+        }
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (rank == ROOT) {
+        return C; 
+    } else {
+        return NULL;
+    }
+}
+
+
+
+Matrix* strassen_multiply_serial(const Matrix* A, const Matrix* B) {
+    // 确保输入的矩阵都是方阵且大小相等
+    if (A->rows != A->cols || B->rows != B->cols || A->rows != B->rows) {
+        return NULL;
+    }
+
+    int n = A->rows;
+    if (n % 2 != 0 && n != 1) {
+        // Strassen算法需要矩阵的维数是2的幂，如果不是，则需要填充矩阵。
+        // 这里不实现填充，所以如果n不是2的幂，则直接返回NULL
+        return NULL;
+    }
+
+    // 为子矩阵分配空间
+    int halfSize = n / 2;
+    Matrix* A11 = allocate_matrix(halfSize, halfSize);
+    Matrix* A12 = allocate_matrix(halfSize, halfSize);
+    Matrix* A21 = allocate_matrix(halfSize, halfSize);
+    Matrix* A22 = allocate_matrix(halfSize, halfSize);
+    Matrix* B11 = allocate_matrix(halfSize, halfSize);
+    Matrix* B12 = allocate_matrix(halfSize, halfSize);
+    Matrix* B21 = allocate_matrix(halfSize, halfSize);
+    Matrix* B22 = allocate_matrix(halfSize, halfSize);
+
+    // 检查是否成功分配内存
+    if (!A11 || !A12 || !A21 || !A22 || !B11 || !B12 || !B21 || !B22) {
+        // 处理分配失败的情况...
+    }
+
+    // 将矩阵A和B分割成子矩阵
+    split_matrix(A, A11, A12, A21, A22);
+    split_matrix(B, B11, B12, B21, B22);
+
+    // 使用Strassen算法计算M1到M7
+    Matrix *M1 = matrix_multiply(matrix_add(A11, A22), matrix_add(B11, B22)); // M1 = (A11 + A22) * (B11 + B22)
+    Matrix *M2 = matrix_multiply(matrix_add(A21, A22), B11);                   // M2 = (A21 + A22) * B11
+    Matrix *M3 = matrix_multiply(A11, matrix_subtract(B12, B22));              // M3 = A11 * (B12 - B22)
+    Matrix *M4 = matrix_multiply(A22, matrix_subtract(B21, B11));              // M4 = A22 * (B21 - B11)
+    Matrix *M5 = matrix_multiply(matrix_add(A11, A12), B22);                   // M5 = (A11 + A12) * B22
+    Matrix *M6 = matrix_multiply(matrix_subtract(A21, A11), matrix_add(B11, B12)); // M6 = (A21 - A11) * (B11 + B12)
+    Matrix *M7 = matrix_multiply(matrix_subtract(A12, A22), matrix_add(B21, B22)); // M7 = (A12 - A22) * (B21 + B22)
+
+    // print all Mi
+    printf("serial result first element: \n");
+    printf("M1[0][0] = %f\n", M1->data[0]);
+    printf("M2[0][0] = %f\n", M2->data[0]); 
+    printf("M3[0][0] = %f\n", M3->data[0]);
+    printf("M4[0][0] = %f\n", M4->data[0]);
+    printf("M5[0][0] = %f\n", M5->data[0]);
+    printf("M6[0][0] = %f\n", M6->data[0]);
+    printf("M7[0][0] = %f\n", M7->data[0]);
+
+    // 计算结果子矩阵
+    Matrix *C11 = matrix_add(matrix_subtract(matrix_add(M1, M4), M5), M7);
+    Matrix *C12 = matrix_add(M3, M5);
+    Matrix *C21 = matrix_add(M2, M4);
+    Matrix *C22 = matrix_add(matrix_subtract(matrix_add(M1, M3), M2), M6);
+
+    // 组合子矩阵得到最终结果
+    Matrix *result = combine_matrix(C11, C12, C21, C22);
+
+    // 释放分配的内存
+    free_matrix(A11);
+    free_matrix(A12);
+    free_matrix(A21);
+    free_matrix(A22);
+    free_matrix(B11);
+    free_matrix(B12);
+    free_matrix(B21);
+    free_matrix(B22);
+    free_matrix(M1);
+    free_matrix(M2);
+    free_matrix(M3);
+    free_matrix(M4);
+    free_matrix(M5);
+    free_matrix(M6);
+    free_matrix(M7);
+    free_matrix(C11);
+    free_matrix(C12);
+    free_matrix(C21);
+    free_matrix(C22);
+
+    return result;
 }

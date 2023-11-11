@@ -102,15 +102,19 @@ distribute_data(level, max_level){
     - [x] worker receives data from its leader (2 matrix)
     - [x] for-loop to quit after reaching the lowest level (`max_level`), levle ++
 
-- [ ] `matrix_multiply` to compute on the lowest level
+- [x] `matrix_multiply` to compute on the lowest level
 
-- [ ] `collect_results` to collect data from the lowest level to the ROOT (for-loop)
-    - [ ] worker sends data (1 matrix) to leader under current level
-    - [ ] leader receives data from workers under current level and combine into one matrix
+- [x] `collect_results` to collect data from the lowest level to the ROOT (for-loop)
+    - [x] worker sends data (1 matrix) to leader under current level
+    - [x] leader receives data from workers under current level and combine into one matrix
         - compute C11, C12, C21, C22
         - combine them into C
-    - [ ] for-loop to quit after reaching the ROOT (`level = 1`), level --
+    - [x] for-loop to quit after reaching the ROOT (`level = 1`), level --
 
+### Isues
+- [ ] when N is large, the ROOT send and receive will dead lock
+    - [ ] use `MPI_Sendrecv` to send and receive at the same time for the ROOT to ROOT communication
+    - [ ] use `MPI_Send` and `MPI_Recv` to send and receive separately
 
     
 
