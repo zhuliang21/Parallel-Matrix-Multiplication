@@ -113,26 +113,9 @@ distribute_data(level, max_level){
 
 ### Isues
 - [ ] when N is large, the ROOT send and receive will dead lock
-    - [ ] use `MPI_Sendrecv` to send and receive at the same time for the ROOT to ROOT communication
-    - [ ] use `MPI_Send` and `MPI_Recv` to send and receive separately
-
-    
-
-
-```
-f(data, data_size, level, max_level){
-    if (level = max_level) {
-        return sum(data, data_size)
-    }
-    else {
-        split data into subdata data1, data2
-        half_size = data_size / 2
-        sum1 = f(data1, half_size, level+1, max_level)
-        sum2 = f(data2, half_size, level+1, max_level)
-        return sum1 + sum2
-    }
-}
-```
+    - dead lock: ROOT send data to itself, and wait for itself to receive
+    - [ ] `distributed_data`: when leader is ROOT, only send other 6 matrix to workers, and copy the first matrix; when worker is ROOT, take the copyed matrix to itself.
+    - [ ] `collect_results`: when worker is ROOT, only copy its result; when leader is ROOT, receive other 6 matrix from workers, and take the copyed matrix to itself.
 
 
 

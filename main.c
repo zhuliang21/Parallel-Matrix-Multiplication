@@ -12,7 +12,7 @@ int main(int argc, char** argv) {
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    int N = 1 << 5;
+    int N = 1 << 11;
     int max_level = 1;
 
     // 创建矩阵A和B，只在根进程进行
