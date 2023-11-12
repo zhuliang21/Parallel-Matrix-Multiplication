@@ -14,30 +14,33 @@ Please complete the following:
 5. Comment on your performance results.
 
 
- $Level = 1, 2, 3$
+## TODO
 
- $P = 7^{Level}$
+- [ ] speedup curve
+- [ ] slide for presentation
+- [ ] report
 
- $N = 256, 1024, 4096$
 
- Total situations:  $3 \times 3 = 9$
-
-## General Idea: Multiple Master-slave Tree
+## General Idea: Multi Master-slave Tree
 1. distribute data to each core on mutiple master-slave tree to the lowest level (recursive)
 2. compute on the lowest level
 3. collect data from the lowest level to the ROOT (recursive)
 
-## Part 0: build the master-slave tree
+## Step 0: build the master-slave tree
 
-Multiple Master-slave Tree: (static)
+Multi Master-slave Tree: (static)
 ```
 0 -> [0, 1, 2, 3, 4, 5, 6]
+---------------------------------
 1 -> [7, 8, 9, 10, 11, 12, 13]
 2 -> [14, 15, 16, 17, 18, 19, 20]
 3 -> [21, 22, 23, 24, 25, 26, 27]
 4 -> [28, 29, 30, 31, 32, 33, 34]
 5 -> [35, 36, 37, 38, 39, 40, 41]
 6 -> [42, 43, 44, 45, 46, 47, 48]
+---------------------------------
+7 -> [49, 50, 51, 52, 53, 54, 55]
+......
 ```
 
 - [x] `is_root` to check if current rank is root under current level
@@ -45,7 +48,7 @@ Multiple Master-slave Tree: (static)
 - [x] `get_root_rank` to get root rank
 - [x] `get_worker_ranks` to get worker rank
 
-## Part 1: distribute data
+## Step 1: distribute data
 
 Since after the addition or subtraction, the
 Strassen submatrices multiplies have similar patterns: (submatrices of A) $\times$ (submatrices of B), we can first compute the submatrices of A and B on root, then send them to 7 cores, and then compute the 7 matrix multiplications on 7 cores.
@@ -79,16 +82,12 @@ distribute_data(level, max_level){
 
 
 - [x] `prepare_strassen` to prepare `A` `B` into matrix array  `M_A[]` and `M_B[]`
-- [ ] distribute `M_A[]` and `M_B[]` submatrices to its workers
-    - [ ] `root_send_data` to send data to workers
-    - [ ] `worker_receive_data` to receive data from root
+- [x] distribute `M_A[]` and `M_B[]` submatrices to its workers
+    - [x] `root_send_data` to send data to workers
+    - [x] `worker_receive_data` to receive data from root
 
-
-
-
-
-- [ ] add input arguments `currentLevel` and `maxLevel`
-- [ ] add quit condition `if (currentLevel == maxLevel)`
+- [x] add input arguments `currentLevel` and `maxLevel`
+- [x] add quit condition `if (currentLevel == maxLevel)`
 
 
 - [ ] functions for root and worker relationship
@@ -102,8 +101,26 @@ distribute_data(level, max_level){
     - [x] worker receives data from its leader (2 matrix)
     - [x] for-loop to quit after reaching the lowest level (`max_level`), levle ++
 
+## Step 2: compute on the lowest level
+
 - [x] `matrix_multiply` to compute on the lowest level
 
+
+## Step 3: collect results and combine into one matrix
+
+```
+collect_results(level, max_level){
+    for level = max_level, level > 0, level -- {
+        if rank is leader unter current level {
+            receive data from its 7 workers
+            combine them into one matrix
+        }
+        if rank is worker unter current level {
+            send data to its leader
+        }
+    }
+}
+```
 - [x] `collect_results` to collect data from the lowest level to the ROOT (for-loop)
     - [x] worker sends data (1 matrix) to leader under current level
     - [x] leader receives data from workers under current level and combine into one matrix
@@ -112,33 +129,33 @@ distribute_data(level, max_level){
     - [x] for-loop to quit after reaching the ROOT (`level = 1`), level --
 
 ### Isues
-- [ ] when N is large, the ROOT send and receive will dead lock
+- [x] when N is large, the ROOT send and receive will dead lock
     - dead lock: ROOT send data to itself, and wait for itself to receive
-    - [ ] `distributed_data`: when leader is ROOT, only send other 6 matrix to workers, and copy the first matrix; when worker is ROOT, take the copyed matrix to itself.
-    - [ ] `collect_results`: when worker is ROOT, only copy its result; when leader is ROOT, receive other 6 matrix from workers, and take the copyed matrix to itself.
+    - [x] `distributed_data`: when leader is ROOT, only send other 6 matrix to workers, and copy the first matrix; when worker is ROOT, take the copyed matrix to itself.
+    - [x] `collect_results`: when worker is ROOT, only copy its result; when leader is ROOT, receive other 6 matrix from workers, and take the copyed matrix to itself.
 
 
 
 Description (level1):
-- 0 devides and sends to its 7 workers (size: N/2)
+- ROOT devides and sends to its 7 workers (size: N/2)
 - 7 workers compute and send back to 0 (size: N/2)
 - 0 combine and return (size: N)
 
 Description (level2):
-- 0 devides and sends to its 7 workers (size: N/2)
+- ROOT devides and sends to its 7 workers (size: N/2)
 - 7 workers devides and sends to their 7x7 workers (size: N/4)
 - 7x7 workers compute and send back to their 7 workers (size: N/4)
 - 7 workers combine and send back to 0 (size: N/2)
-- 0 combine return (size: N)
+- ROOT combine return (size: N)
 
 Description (level3):
-- 0 devides and sends to its 7 workers (size: N/2)
+- ROOT devides and sends to its 7 workers (size: N/2)
 - 7 workers devides and sends to their 7x7 workers (size: N/4)
 - 7x7 workers devides and sends to their 7x7x7 workers (size: N/8)
 - 7x7x7 workers compute and send back to their 7x7 workers (size: N/8)
 - 7x7 workers combine and send back to their 7 workers (size: N/4)
 - 7 workers combine and send back to 0 (size: N/2)
-- 0 combine and retrun (size: N)
+- ROOT combine and retrun (size: N)
 
 
 ```
@@ -183,10 +200,6 @@ sbatch project3.sh
 ```
 The results will be stored in the file `output.txt`.
 
-The output records three parts:
-- test on small matrices and comfirm both algorithms are correct; 
-- measure the execution time for Ring algorithm (P>1);
-- measure the execution time for Naive algorithm (P=1)
 
 
 ## Appendix program

@@ -196,6 +196,23 @@ Matrix* combine_matrix(Matrix *C11, Matrix *C12, Matrix *C21, Matrix *C22) {
     return result;
 }
 
+int check_result(Matrix* result_by_naive, Matrix* result_by_ring, double tolerance) {
+    if (result_by_naive->rows != result_by_ring->rows || result_by_naive->cols != result_by_ring->cols) {
+        return 0;  // row and col do not match
+    }
+
+    for (int i = 0; i < result_by_naive->rows; i++) {
+        for (int j = 0; j < result_by_naive->cols; j++) {
+            double diff = fabs(result_by_naive->data[i * result_by_naive->cols + j] - result_by_ring->data[i * result_by_ring->cols + j]);
+            if (diff > tolerance) {
+                return 0;  // element does not match
+            }
+        }
+    }
+
+    return 1;  // all elements match
+}
+
 int quick_check_result(Matrix* result_1, Matrix* result_2, double tolerance) {
     if (result_1->rows != result_2->rows || result_1->cols != result_2->cols) {
         return 0;  // 行和列不匹配
@@ -316,7 +333,7 @@ void distribute_data(Matrix** M_A, Matrix** M_B, Matrix* A, Matrix* B, int local
             for (int i = 1; i < NUM_TASKS; i++) {
                 MPI_Isend(M_A[i]->data, M_A[i]->rows * M_A[i]->cols, MPI_DOUBLE, worker_rank[i], 0, MPI_COMM_WORLD, &requests[request_count++]);
                 MPI_Isend(M_B[i]->data, M_B[i]->rows * M_B[i]->cols, MPI_DOUBLE, worker_rank[i], 1, MPI_COMM_WORLD, &requests[request_count++]);
-                printf("process %d send M_A[%d] and M_B[%d] to process %d\n", rank, i, i, worker_rank[i]);
+                // printf("process %d send M_A[%d] and M_B[%d] to process %d\n", rank, i, i, worker_rank[i]);
             }
             MPI_Waitall(request_count, requests, MPI_STATUSES_IGNORE);
             
@@ -327,7 +344,7 @@ void distribute_data(Matrix** M_A, Matrix** M_B, Matrix* A, Matrix* B, int local
             for (int i = 0; i < NUM_TASKS; i++) {
                 MPI_Isend(M_A[i]->data, M_A[i]->rows * M_A[i]->cols, MPI_DOUBLE, worker_rank[i], 0, MPI_COMM_WORLD, &requests[request_count++]);
                 MPI_Isend(M_B[i]->data, M_B[i]->rows * M_B[i]->cols, MPI_DOUBLE, worker_rank[i], 1, MPI_COMM_WORLD, &requests[request_count++]);
-                printf("!!process %d send M_A[%d][0][0] = %f and M_B[%d][0][0] = %f to process %d\n", rank, i, M_A[i]->data[0], i, M_B[i]->data[0], worker_rank[i]);
+                // printf("!!process %d send M_A[%d][0][0] = %f and M_B[%d][0][0] = %f to process %d\n", rank, i, M_A[i]->data[0], i, M_B[i]->data[0], worker_rank[i]);
             }
             MPI_Waitall(request_count, requests, MPI_STATUSES_IGNORE);           
         }
@@ -355,7 +372,7 @@ void distribute_data(Matrix** M_A, Matrix** M_B, Matrix* A, Matrix* B, int local
 
             MPI_Waitall(recv_count, recv_requests, MPI_STATUSES_IGNORE);
             // print M_A and M_B first element, and its level and rank
-            printf("process %d receive M_A[0][0] = %f and M_B[0][0] = %f from process %d\n", rank, (*M_A)->data[0], (*M_B)->data[0], leader_rank);
+            // printf("process %d receive M_A[0][0] = %f and M_B[0][0] = %f from process %d\n", rank, (*M_A)->data[0], (*M_B)->data[0], leader_rank);
         } else {
             // worker receive data from itselves
             *M_A = allocate_matrix(local_n, local_n);  // 使用您的函数创建矩阵并分配内存
@@ -450,7 +467,7 @@ void collect_results(Matrix** M_C, Matrix* C, int local_n, int level) {
 
         // print all Mi first element, and its level and rank
         for (int i = 0; i < NUM_TASKS; i++) {
-            printf("level %d: process %d receive M%d[0][0] = %f from process %d\n", level, rank, i+1, M[i]->data[0], worker_rank[i]);
+            // printf("level %d: process %d receive M%d[0][0] = %f from process %d\n", level, rank, i+1, M[i]->data[0], worker_rank[i]);
         }
         // compute M into C11 C12 C21 C22 and combine into M_C
         *M_C = assemble_C(M, local_n);
@@ -458,7 +475,7 @@ void collect_results(Matrix** M_C, Matrix* C, int local_n, int level) {
 
 }
 
-Matrix* strassen_parallel(Matrix* A, Matrix* B, int N, int max_level) {
+Matrix* strassen_multiply_parallel(Matrix* A, Matrix* B, int N, int max_level) {
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -486,8 +503,8 @@ Matrix* strassen_parallel(Matrix* A, Matrix* B, int N, int max_level) {
         printf("A or B is NULL\n");
     }
     //print matrix A and B first element and its rank
-    printf("process %d: A[0][0] = %f\n", rank, A->data[0]);
-    printf("process %d: B[0][0] = %f\n", rank, B->data[0]);
+    // printf("process %d: A[0][0] = %f\n", rank, A->data[0]);
+    // printf("process %d: B[0][0] = %f\n", rank, B->data[0]);
 
     Matrix* C = matrix_multiply(A, B);
     // print C's first element and its rank
