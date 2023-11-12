@@ -18,6 +18,7 @@ Please complete the following:
 
 - [ ] speedup curve
 - [ ] slide for presentation
+    - [ ] animation
 - [ ] report
 
 
