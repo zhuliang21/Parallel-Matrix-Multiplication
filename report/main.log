@@ -1,10 +1,10 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.8.12)  25 OCT 2023 14:25
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.8.12)  13 NOV 2023 16:42
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
  %&-line parsing enabled.
-**/Users/zhuliang/project3/report/main.tex
-(/Users/zhuliang/project3/report/main.tex
+**/Users/zhuliang/project4/report/main.tex
+(/Users/zhuliang/project4/report/main.tex
 LaTeX2e <2022-11-01> patch level 1
 L3 programming layer <2023-02-22> (/usr/local/texlive/2023/texmf-dist/tex/latex/base/article.cls
 Document Class: article 2022/07/02 v1.4n Standard LaTeX document class
@@ -453,58 +453,42 @@ LaTeX Font Info:    Trying to load font information for U+msb on input line 36.
  (/usr/local/texlive/2023/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on input line 52.
+Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on input line 56.
  [1
 
 {/usr/local/texlive/2023/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
-<speedup_curve.png, id=62, 289.08pt x 361.35pt>
+<speedup_curve.png, id=45, 289.08pt x 216.81pt>
 File: speedup_curve.png Graphic file (type png)
 <use speedup_curve.png>
-Package pdftex.def Info: speedup_curve.png  used on input line 141.
-(pdftex.def)             Requested size: 241.84843pt x 302.30788pt.
+Package pdftex.def Info: speedup_curve.png  used on input line 134.
+(pdftex.def)             Requested size: 290.22107pt x 217.67622pt.
  [2
 pdfTeX warning (ext4): destination with the same identifier (name{table.1}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.160 
-      ] [3
+l.151 \end{document}
+                    ] [3
 pdfTeX warning (ext4): destination with the same identifier (name{figure.1}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.196 \subsection
-                 {Performance} <./speedup_curve.png>]
-<speedup_curve_appendex.png, id=81, 361.35pt x 289.08pt>
-File: speedup_curve_appendex.png Graphic file (type png)
-<use speedup_curve_appendex.png>
-Package pdftex.def Info: speedup_curve_appendex.png  used on input line 233.
-(pdftex.def)             Requested size: 241.84843pt x 193.47968pt.
- [4
-pdfTeX warning (ext4): destination with the same identifier (name{table.2}) has been already used, duplicate ignored
-<argument> ...shipout:D \box_use:N \l_shipout_box 
-                                                  \__shipout_drop_firstpage_...
-l.243 
-      
-pdfTeX warning (ext4): destination with the same identifier (name{figure.2}) has been already used, duplicate ignored
-<argument> ...shipout:D \box_use:N \l_shipout_box 
-                                                  \__shipout_drop_firstpage_...
-l.243 
-       <./speedup_curve_appendex.png>] [5] (./main.aux)
+l.151 \end{document}
+                     <./speedup_curve.png>] (./main.aux)
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: 750924AF8E4D4021C28D5C88E51A2AF4;1147.
+(rerunfilecheck)             Checksum: F24AB33339E9B48A1867A03505B780C4;657.
  ) 
 Here is how much of TeX's memory you used:
- 12870 strings out of 476025
- 198843 string characters out of 5790017
+ 12840 strings out of 476025
+ 198348 string characters out of 5790017
  1864388 words of memory out of 5000000
- 33121 multiletter control sequences out of 15000+600000
+ 33101 multiletter control sequences out of 15000+600000
  521867 words of font info for 69 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,10n,76p,300b,441s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,11n,76p,300b,437s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmcsc10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmti12.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt12.pfb>
-Output written on main.pdf (5 pages, 309193 bytes).
+Output written on main.pdf (3 pages, 177444 bytes).
 PDF statistics:
- 145 PDF objects out of 1000 (max. 8388607)
- 112 compressed objects within 2 object streams
- 24 named destinations out of 1000 (max. 500000)
- 91 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 109 PDF objects out of 1000 (max. 8388607)
+ 81 compressed objects within 1 object stream
+ 15 named destinations out of 1000 (max. 500000)
+ 54 words of extra memory for PDF output out of 10000 (max. 10000000)
 

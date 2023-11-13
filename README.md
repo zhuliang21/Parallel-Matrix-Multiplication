@@ -8,7 +8,7 @@ In this project, you carry three (3) levels of Strassen's algorithm, and you may
 Please complete the following:
 
 1. Design the algorithms on how to distribute the sub-matrices to your participating cores with the objectives of minimizing memory use and communication costs.
-2. Test the performance using on $7^{\beta}$ with $\beta = 1, 2, 3, $ for matrix of size $N = 2^\alpha$ with $\alpha = 8, 10, 12$ 
+2. Test the performance using on $7^{\beta}$ with $\beta = 1, 2, 3$ for matrix of size $N = 2^\alpha$ with $\alpha = 8, 10, 12$ 
 3. Collect the performance results and analyze them.
 4. Plot the speedup curves.
 5. Comment on your performance results.
@@ -16,10 +16,16 @@ Please complete the following:
 
 ## TODO
 
-- [ ] speedup curve
+- [x] speedup curve
+    - table for time
+    - plot for speedup
+- [ ] report
+    - pesudo code (distributed_data, compute, collect_results)
+    - ROOT special case (appendix)
+    - analysis
 - [ ] slide for presentation
     - [ ] animation
-- [ ] report
+
 
 
 ## General Idea: Multi Master-slave Tree
