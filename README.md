@@ -30,35 +30,43 @@ Please complete the following:
 
 Slide 0: Title
 
-Slide 1: Introduction
+Slide: Introduction
 - What is Strassen's Algorithm (7 matrix multiplications)
 - This project: 3 levels of Strassen's Algorithm
 
-Slide 2: Parallelization
+Slide: Outline
+- Parallelization Implementation
+- Result
+- Analysis
+- Summary
+
+Slide: Parallelization
 - Multi Master-slave Tree
 - Mention it minimizes memory use and communication costs
 
-Slide 3: Implementation Highlights
+Slide: Implementation Highlights
 - Mention recursive tree structure
+- Reuse the previous leader as the next level worker.
 - Mention ROOT special case (dead lock)
 
-Slide 4: Scalability for different levels
+Slide: Scalability for different levels
 - Show 3-step scalability for different levels
 - Animation to show the data flow (2-level example)
 
-Slide 5: Result
+Slide: Result
 - Table of time
 - Plot of speedup
 
-Slide 6: Analysis
+Slide: Analysis
 - Balance between communication and computation
 - More efficient for larger N
 
-Slide 7: Conclusion
+Slide: Summary
 - Using multi master-slave tree to implement Strassen's Algorithm
 - Scalable for different levels
+- Further work to improve the study.
 
-Slide 8: Q&A
+Slide: Q&A
 
 
 
