@@ -42,16 +42,25 @@ Each layer comprises a single leader and seven workers, where workers can serve 
  facilitating the next level of the Strassen algorithm. 
 This design allows the leader to distribute specific submatrices to its workers, 
  who later return their computed results. 
-By limiting data exchange to only essential information between leaders and workers, 
+By limiting data exchange to only necessary data between leaders and workers, 
  our implementation effectively reduces communication overhead and optimizes memory consumption.
 
 
 \section{Algorithm Description}
-The general idea of the parallel Strassen algorithm is to divide-and-conquer the matrix multiplication problem into subproblems. 
-The subproblems are then distributed to different processors to compute.
-The results are then collected and combined to form the final result.
-This process can be repeated recursively until the 
+The parallel Strassen algorithm employs a divide-and-conquer approach to decompose matrix multiplication into smaller, manageable subproblems. 
+These subproblems are distributed across multiple processors for parallel computation. After processing, the results are aggregated and synthesized into the final product. This recursive method continues until the subproblems reach a size conducive to sequential computation.
+ 
+Our MPI-based implementation is a three-step process within a master-slave tree structure:
+\begin{enumerate}
+\item Distribute submatrices to worker processors, descending to the targeted level.
+\item Perform matrix multiplication at each worker processor on the targeted level.
+\item Relay results back up to the leader processor for aggregation, culminating at the root.
+\end{enumerate}
+ 
+The following details the pseudocode for our implementation, 
+beginning with an overview of the algorithm, followed by the data distribution and result collection functions.
 
+ 
 \begin{algorithm}[htbp]
     \caption{Strassen Multiply Parallel}
     \label{alg:strassen_multiply_parallel}
@@ -59,22 +68,110 @@ This process can be repeated recursively until the
     \Procedure{StrassenMultiplyParallel}{$A, B, N, max\_level$}
 
         \For{$level \gets 1$ \textbf{to} $max\_level$}
-            \State \Call{DistributeData}{$level$}  
+            \State \Call{DistributeData}{$level$, $rank$}  
         \EndFor
         
-        \State $C \gets$ \Call{MatrixMultiply}{$A, B$}
+        \State Perform matrix multiplication on all workers.
         
         \For{$level \gets max\_level$ \textbf{down to} $1$}
-            \State \Call{CollectResults}{$level$}
+            \State \Call{CollectResults}{$level$, $rank$}
         \EndFor
         
-        \State \Return $C$ on \textit{ROOT}
+        \State \Return final result on \textit{ROOT}
+    \EndProcedure
+    \end{algorithmic}
+\end{algorithm}
+
+\subsection{Data Distribution}
+The \texttt{distribute\_data} function assigns submatrices to worker processors. This process starts at the root processor and continues recursively to the target level. The leader processor generates pairs of submatrices ($M^A_i$ and $M^B_i$) and distributes them to its workers. The submatrices are defined as follows:
+
+\begin{table}[htbp]
+    \centering
+    \begin{tabular}{cccc}
+        \toprule
+        $M^A_i$ & $M^B_i$ & $M_i$ & Assignment \\
+        \midrule
+        $M^A_1 = (A_{11} + A_{22})$ & $M^B_1 = (B_{11} + B_{22})$ & $M_1 = M^A_1 \times M^B_1$ & $\rightarrow$ Worker 1 \\
+        $M^A_2 = (A_{21} + A_{22})$ & $M^B_2 = B_{11}$ & $M_2 = M^A_2 \times M^B_2$ & $\rightarrow$ Worker 2 \\
+        $M^A_3 = A_{11}$ & $M^B_3 = (B_{12} - B_{22})$ & $M_3 = M^A_3 \times M^B_3$ & $\rightarrow$ Worker 3 \\
+        $M^A_4 = A_{22}$ & $M^B_4 = (B_{21} - B_{11})$ & $M_4 = M^A_4 \times M^B_4$ & $\rightarrow$ Worker 4 \\
+        $M^A_5 = (A_{11} + A_{12})$ & $M^B_5 = B_{22}$ & $M_5 = M^A_5 \times M^B_5$ & $\rightarrow$ Worker 5 \\
+        $M^A_6 = (A_{21} - A_{11})$ & $M^B_6 = (B_{11} + B_{12})$ & $M_6 = M^A_6 \times M^B_6$ & $\rightarrow$ Worker 6 \\
+        $M^A_7 = (A_{12} - A_{22})$ & $M^B_7 = (B_{21} + B_{22})$ & $M_7 = M^A_7 \times M^B_7$ & $\rightarrow$ Worker 7 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Submatrices Distributed to Each Worker}
+    \label{tab:submatrices}
+\end{table}
+
+
+All $M^A_i$ and $M^B_i$ submatrices are of the same size and are sent to seven cores for computation. The generation and calculation of each $M^A_i$ and $M^B_i$ occur at the leader core. 
+This approach ensures uniformity in the format of the distributed data and facilitates further distribution. 
+Although it leads to a non-parallel computation of certain addition and subtraction operations, 
+these operations are computationally less intensive compared to multiplication. Hence, we believe the benefits outweigh the costs.
+
+% pesudo code
+\begin{algorithm}[htbp]
+    \caption{Distribute Data}
+    \label{alg:distribute_data}
+    \begin{algorithmic}[1]
+    \Procedure{DistributeData}{$level$, $rank$}
+        \If{$rank$ is leader under $level$}
+            \State Send all $M^A_i, M^B_i$ to its worker $i$
+        \EndIf
+        
+        \If{$rank$ is worker under $level$}
+            \State Receive $M^A_i, M^B_i$ from its leader
+       \EndIf
     \EndProcedure
     \end{algorithmic}
 \end{algorithm}
 
 
+\subsection{Result Collection}
+The \texttt{collect\_results} function is responsible for gathering computation outcomes from worker processors and assimilating them into a unified matrix. This reverse hierarchical procedure commences at the designated target level and ascends to the root processor. Each leader processor acquires partial results ($M_1$ to $M_7$) from its subordinates and integrates them to construct the final matrix. The integration is delineated as follows:
 
+\begin{table}[htbp]
+\centering
+\begin{tabular}{ccl}
+\toprule
+\textbf{Submatrix} & \textbf{Aggregated Components} \\
+\midrule
+$C_{11}$ & $M_1 + M_4 - M_5 + M_7$ \\
+$C_{12}$ & $M_3 + M_5$ \\
+$C_{21}$ & $M_2 + M_4$ \\
+$C_{22}$ & $M_1 - M_2 + M_3 + M_6$ \\
+\bottomrule
+\end{tabular}
+\caption{Aggregation of Results from Worker Processors}
+\label{tab:aggregation}
+\end{table}
+
+This table succinctly illustrates the process of assembling the final matrix from the individual components calculated by the workers.
+
+% pesudo code
+\begin{algorithm}[htbp]
+    \caption{Collect Results}
+    \label{alg:collect_results}
+    \begin{algorithmic}[1]
+    \Procedure{CollectResults}{$level$, $rank$}
+        \If{$rank$ is leader under $level$}
+            \State Receive all $M_i$ from its workers
+            \State Aggregate $M_i$ to $C$
+        \EndIf
+        
+        \If{$rank$ is worker under $level$}
+            \State Send $M_i$ to its leader
+       \EndIf
+    \EndProcedure
+    \end{algorithmic}
+\end{algorithm}   
+
+
+As outlined in Algorithms \ref{alg:distribute_data} and \ref{alg:collect_results}, establishing the leader-worker relationships for each processor at different levels is crucial. 
+This is achieved through a recursive tree structure, where the relationships are dictated by the processors' ranks. 
+These relationships remain consistent across all levels. 
+For an in-depth understanding of this tree structure, please refer to the Appendix \ref{appendix:tree_structure}.
 
 This description is intentionally streamlined, 
 omitting many details and supporting functions for brevity. 
@@ -142,7 +239,50 @@ The speedup values for each \( N \) (under level 2 and level 3) are plotted in t
 
 
 \appendix
-\label{app:myappendix}
+% print Appendix
+\clearpage
+\section{Tree Structure for Leader-Worker Relationships}
+\label{appendix:tree_structure}
+
+The leader-worker relationships within the parallel Strassen algorithm are organized in a hierarchical tree structure. This structure is pivotal for determining the flow of data distribution and result collection across different levels of computation. The tree structure is recursive, with each leader processor being connected to a set of worker processors. The following table illustrates these relationships:
+
+\begin{table}[htbp]
+    \centering
+    \begin{tabular}{cl}
+        \toprule
+        \textbf{Leader Rank} & \textbf{Worker Ranks} \\
+        \midrule
+        0 & [0, 1, 2, 3, 4, 5, 6] \\
+        1 & [7, 8, 9, 10, 11, 12, 13] \\
+        2 & [14, 15, 16, 17, 18, 19, 20] \\
+        3 & [21, 22, 23, 24, 25, 26, 27] \\
+        4 & [28, 29, 30, 31, 32, 33, 34] \\
+        5 & [35, 36, 37, 38, 39, 40, 41] \\
+        6 & [42, 43, 44, 45, 46, 47, 48] \\
+        % Continue as needed...
+        % print and so on on the next line 
+        ... & ... \\
+        \bottomrule
+    \end{tabular}
+    \caption{Leader to Worker Relationships in the Tree Structure}
+    \label{tab:leader_worker_relationships}
+\end{table}
+
+Each processor's rank in the tree structure determines its specific role, ensuring consistent leader-worker assignments throughout the parallel computation of the Strassen algorithm. This design reuses leaders from one level as workers in the subsequent level, facilitating the implementation of levels 1, 2, and 3 with 7, 49, and 343 processors, respectively. The hierarchy is pre-established and remains unchanged throughout the process.
+
+To identify the leader and worker ranks at any given level, we employ the \texttt{get\_leade\_rank} and \texttt{ge\_worker\_rank} functions. Additionally, the functions \texttt{is\_leader} and \texttt{is\_worker} determine whether a processor serves as a leader or a worker at a particular level. For a detailed understanding of these functionalities, please refer to the \texttt{functions.c} file in the source code.
+
+\subsection{Special Case: \textit{ROOT}}
+\label{subsec:special_case_root}
+As evident from the leader-worker relationships detailed in , the ROOT processor (rank 0) 
+ uniquely acts as both sender and receiver simultaneously. 
+ This dual role could lead to deadlock situations when employing standard MPI communication methods like \texttt{MPI\_Isend} and \texttt{MPI\_Irecv}.
+
+To circumvent this issue, a special handling mechanism is implemented specifically for the ROOT processor. Instead of using MPI functions for sending and receiving data, the ROOT processor directly writes the relevant submatrices into its memory buffer and later reads from this buffer for further processing. This approach not only prevents deadlock scenarios but also reduces communication overhead, as it eliminates the need for additional message-passing tasks for the ROOT processor. By directly manipulating the memory, we maintain the efficiency and fluidity of the algorithm's execution, especially at the top level of the tree structure.
+
+
+
+
 
 \section*{File Notes}
 The source code of the program is in the \texttt{project4} folder. 
