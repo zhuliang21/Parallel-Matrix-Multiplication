@@ -19,12 +19,48 @@ Please complete the following:
 - [x] speedup curve
     - table for time
     - plot for speedup
-- [ ] report
-    - pesudo code (distributed_data, compute, collect_results)
-    - ROOT special case (appendix)
-    - analysis
+- [x] report
+    - [x] pesudo code (distributed_data, compute, collect_results)
+    - [x] ROOT special case (appendix)
+    - [x] analysis
 - [ ] slide for presentation
     - [ ] animation
+
+## Slides for Presentation Outline
+
+Slide 0: Title
+
+Slide 1: Introduction
+- What is Strassen's Algorithm (7 matrix multiplications)
+- This project: 3 levels of Strassen's Algorithm
+
+Slide 2: Parallelization
+- Multi Master-slave Tree
+- Mention it minimizes memory use and communication costs
+
+Slide 3: Implementation Highlights
+- Mention recursive tree structure
+- Mention ROOT special case (dead lock)
+
+Slide 4: Scalability for different levels
+- Show 3-step scalability for different levels
+- Animation to show the data flow (2-level example)
+
+Slide 5: Result
+- Table of time
+- Plot of speedup
+
+Slide 6: Analysis
+- Balance between communication and computation
+- More efficient for larger N
+
+Slide 7: Conclusion
+- Using multi master-slave tree to implement Strassen's Algorithm
+- Scalable for different levels
+
+Slide 8: Q&A
+
+
 
 
 

@@ -30,4 +30,5 @@ graph <- ggplot(results, aes(x = P, y = Speedup, group = N, color = as.factor(N)
   theme_minimal()
 
 # Save the plot
-ggsave("~/project4/report/speedup_curve.png", graph, width = 5, height = 4, dpi = 200)
+ggsave("~/project4/report/speedup_curve.png", graph, width = 4, height = 3, dpi = 300)
+

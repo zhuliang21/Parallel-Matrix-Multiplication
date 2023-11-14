@@ -54,7 +54,7 @@ Our MPI-based implementation is a three-step process within a master-slave tree 
 \begin{enumerate}
 \item Distribute submatrices to worker processors, descending to the targeted level.
 \item Perform matrix multiplication at each worker processor on the targeted level.
-\item Relay results back up to the leader processor for aggregation, culminating at the root.
+\item Relay results back up to the leader processor for aggregation, culminating at the \textit{root}.
 \end{enumerate}
  
 The following details the pseudocode for our implementation, 
@@ -83,7 +83,7 @@ beginning with an overview of the algorithm, followed by the data distribution a
 \end{algorithm}
 
 \subsection{Data Distribution}
-The \texttt{distribute\_data} function assigns submatrices to worker processors. This process starts at the root processor and continues recursively to the target level. The leader processor generates pairs of submatrices ($M^A_i$ and $M^B_i$) and distributes them to its workers. The submatrices are defined as follows:
+The \texttt{distribute\_data} function assigns submatrices to worker processors. This process starts at the \textit{root} processor and continues recursively to the target level. The leader processor generates pairs of submatrices ($M^A_i$ and $M^B_i$) and distributes them to its workers. The submatrices are defined as follows:
 
 \begin{table}[htbp]
     \centering
@@ -129,7 +129,7 @@ these operations are computationally less intensive compared to multiplication. 
 
 
 \subsection{Result Collection}
-The \texttt{collect\_results} function is responsible for gathering computation outcomes from worker processors and assimilating them into a unified matrix. This reverse hierarchical procedure commences at the designated target level and ascends to the root processor. Each leader processor acquires partial results ($M_1$ to $M_7$) from its subordinates and integrates them to construct the final matrix. The integration is delineated as follows:
+The \texttt{collect\_results} function is responsible for gathering computation outcomes from worker processors and assimilating them into a unified matrix. This reverse hierarchical procedure commences at the designated target level and ascends to the \textit{root} processor. Each leader processor acquires partial results ($M_1$ to $M_7$) from its subordinates and integrates them to construct the final matrix. The integration is delineated as follows:
 
 \begin{table}[htbp]
 \centering
@@ -223,7 +223,9 @@ The updated speedup \( S \) is defined as:
 
  Using the data from Table \ref{tab:results}, 
   we can compute the speedup for matrix multiplication for different 
-  matrix sizes \( N \) and varying number of processors \( P \). 
+  matrix sizes \( N \) and varying number of processors \( P \) (under level 1, 2, 3). 
+Since the baseline is the performance of the parallel algorithm with \( P = 7 \), 
+ the speedup values are computed using Equation \ref{eqn:updated_speedup}.
 The speedup values for each \( N \) (under level 2 and level 3) are plotted in the following Figure \ref{fig:speedup_curve}.
 
 \begin{figure}
@@ -232,11 +234,24 @@ The speedup values for each \( N \) (under level 2 and level 3) are plotted in t
     \caption{Speedup Curve for Matrix Sizes \( N \)}
     \label{fig:speedup_curve}
 \end{figure}
-    
-
 
 \section{Analysis}
+The speedup curve, as shown in Figure \ref{fig:speedup_curve}, demonstrates the scalability of our parallel Strassen algorithm with varying numbers of processors. An ideal linear speedup is indicated by a dashed line, while the solid lines represent the actual speedup for different matrix sizes. The observed trends can be summarized as follows:
 
+For \(N = 2^8\), the speedup decreases with additional processors, suggesting that the overhead of communication dominates the benefits of parallel computation due to the small size of the matrices. 
+
+When \(N = 2^{10}\), the speedup curve plateaus, indicating that the computational load and communication overhead reach a balance. 
+
+For \(N = 2^{12}\), there is a noticeable increase in speedup, implying that the computation benefits substantially from parallel execution.
+
+The underlying causes for these trends can be attributed to two main factors:
+
+\begin{itemize}
+    \item \textbf{Communication Overhead:} As the number of processors increases, the communication overhead can become a bottleneck, especially for smaller matrices where the communication cost outweighs the computation time.
+    \item \textbf{Computation to Communication Ratio:} For larger matrices, the computation to communication ratio improves, allowing the algorithm to better exploit the parallel architecture. This results in a higher speedup as the computation workload per processor increases, which is more pronounced for \(N = 2^{12}\).
+\end{itemize}
+
+This analysis highlights the critical balance between computation and communication in parallel algorithms and will guide our efforts in optimization, focusing on minimizing communication costs and improving load distribution among processors.
 
 \appendix
 % print Appendix
@@ -272,13 +287,13 @@ Each processor's rank in the tree structure determines its specific role, ensuri
 
 To identify the leader and worker ranks at any given level, we employ the \texttt{get\_leade\_rank} and \texttt{ge\_worker\_rank} functions. Additionally, the functions \texttt{is\_leader} and \texttt{is\_worker} determine whether a processor serves as a leader or a worker at a particular level. For a detailed understanding of these functionalities, please refer to the \texttt{functions.c} file in the source code.
 
-\subsection{Special Case: \textit{ROOT}}
+\subsection{Special Case: \textit{root}}
 \label{subsec:special_case_root}
-As evident from the leader-worker relationships detailed in , the ROOT processor (rank 0) 
+As evident from the leader-worker relationships detailed in , the \textit{root} processor (rank 0) 
  uniquely acts as both sender and receiver simultaneously. 
  This dual role could lead to deadlock situations when employing standard MPI communication methods like \texttt{MPI\_Isend} and \texttt{MPI\_Irecv}.
 
-To circumvent this issue, a special handling mechanism is implemented specifically for the ROOT processor. Instead of using MPI functions for sending and receiving data, the ROOT processor directly writes the relevant submatrices into its memory buffer and later reads from this buffer for further processing. This approach not only prevents deadlock scenarios but also reduces communication overhead, as it eliminates the need for additional message-passing tasks for the ROOT processor. By directly manipulating the memory, we maintain the efficiency and fluidity of the algorithm's execution, especially at the top level of the tree structure.
+To circumvent this issue, a special handling mechanism is implemented specifically for the \textit{root} processor. Instead of using MPI functions for sending and receiving data, the \textit{root} processor directly writes the relevant submatrices into its memory buffer and later reads from this buffer for further processing. This approach not only prevents deadlock scenarios but also reduces communication overhead, as it eliminates the need for additional message-passing tasks for the \textit{root} processor. By directly manipulating the memory, we maintain the efficiency and fluidity of the algorithm's execution, especially at the top level of the tree structure.
 
 
 
