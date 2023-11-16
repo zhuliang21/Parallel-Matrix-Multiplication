@@ -23,8 +23,8 @@ Please complete the following:
     - [x] pesudo code (distributed_data, compute, collect_results)
     - [x] ROOT special case (appendix)
     - [x] analysis
-- [ ] slide for presentation
-    - [ ] animation
+- [x] slide for presentation
+
 
 ## Slides for Presentation Outline
 
@@ -230,34 +230,20 @@ project4/
 ├── make                   # Makefile for building the project
 ├── test.sh                # Script for testing on local machine
 ├── project4.sh            # Script to execute on the cluster
-|── project4_appendix.sh   # Script to execute on the cluster for appendix
 ├── output.txt             # Output file
 ├── output_appendix.txt    # Output file for appendix
-├── report.pdf             # Report PDF file
 └── README.md              # This documentation file
 
 ```
 
 ## How to run the program
-The program can be executed on the cluster by running the script `project3.sh`. 
+The program can be executed on the cluster by running the script `project4.sh`. 
 The script will compile the program and execute it. 
 
 I used the following commands to run the program on the node `short-96core` on the `milan` login node:
 ```
 module load slurm
-cd project3
-chmod +x test.sh
-sbatch project3.sh
+cd project4
+sbatch project4.sh
 ```
 The results will be stored in the file `output.txt`.
-
-
-
-## Appendix program
-The program can be executed on the cluster by running the script `project3_appendix.sh`.
-```
-module load slurm
-cd project3
-sbatch project3_appendix.sh
-```
-The results will be stored in the file `output_appendix.txt`.

@@ -285,7 +285,7 @@ The leader-worker relationships within the parallel Strassen algorithm are organ
 
 Each processor's rank in the tree structure determines its specific role, ensuring consistent leader-worker assignments throughout the parallel computation of the Strassen algorithm. This design reuses leaders from one level as workers in the subsequent level, facilitating the implementation of levels 1, 2, and 3 with 7, 49, and 343 processors, respectively. The hierarchy is pre-established and remains unchanged throughout the process.
 
-To identify the leader and worker ranks at any given level, we employ the \texttt{get\_leade\_rank} and \texttt{ge\_worker\_rank} functions. Additionally, the functions \texttt{is\_leader} and \texttt{is\_worker} determine whether a processor serves as a leader or a worker at a particular level. For a detailed understanding of these functionalities, please refer to the \texttt{functions.c} file in the source code.
+To identify the leader and worker ranks at any given level, we employ the \texttt{get\_leade\_rank} and \texttt{get\_worker\_rank} functions. Additionally, the functions \texttt{is\_leader} and \texttt{is\_worker} determine whether a processor serves as a leader or a worker at a particular level. For a detailed understanding of these functionalities, please refer to the \texttt{functions.c} file in the source code.
 
 \subsection{Special Case: \textit{root}}
 \label{subsec:special_case_root}
